@@ -1,5 +1,6 @@
+import { redirect } from "next/navigation";
 import NavTabs from "@/components/NavTabs";
-import { getOrCreateDemoEstablishment } from "@/lib/demo-establishment";
+import { getSessionEstablishment } from "@/lib/auth";
 import { getDashboardSummary } from "@/lib/dashboard";
 
 // Consulta o Supabase a cada acesso — não faz sentido pré-renderizar em
@@ -11,8 +12,10 @@ function formatCents(cents: number) {
 }
 
 export default async function PainelPage() {
-  const establishment = await getOrCreateDemoEstablishment();
-  const summary = await getDashboardSummary(establishment.id);
+  const session = await getSessionEstablishment();
+  if (!session) redirect("/onboarding");
+
+  const summary = await getDashboardSummary(session.establishmentId);
 
   const trendMax = Math.max(...summary.npsTrend.map((p) => p.score ?? 0), 1);
   const trendMin = Math.min(...summary.npsTrend.map((p) => p.score ?? 0), 0);
@@ -31,7 +34,7 @@ export default async function PainelPage() {
       <NavTabs />
 
       <div className="scene-head" style={{ maxWidth: 640 }}>
-        <span className="eyebrow">Painel do estabelecimento · {establishment.name}</span>
+        <span className="eyebrow">Painel do estabelecimento · {session.establishmentName}</span>
         <h2>O que o dono do restaurante vê</h2>
         <p>
           Dados reais do Supabase — ainda vão aparecer baixos ou zerados até
@@ -141,7 +144,7 @@ export default async function PainelPage() {
       </div>
 
       <footer>
-        Dados reais do Supabase (estabelecimento &quot;{establishment.name}&quot;) — WhatsApp de verdade ainda não está conectado.
+        Dados reais do Supabase (estabelecimento &quot;{session.establishmentName}&quot;) — link público da jornada do cliente: <code>/cliente?e={session.establishmentSlug}</code>
       </footer>
     </div>
   );

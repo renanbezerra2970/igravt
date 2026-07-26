@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { supabaseAdmin } from "@/lib/supabase/admin";
-import { getOrCreateDemoEstablishment } from "@/lib/demo-establishment";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSessionEstablishment } from "@/lib/auth";
 
 export async function POST(request: Request) {
+  const session = await getSessionEstablishment();
+  if (!session) {
+    return NextResponse.json({ error: "Não autenticado" }, { status: 401 });
+  }
+
   const body = await request.json().catch(() => null);
   const whatsapp: string | undefined = body?.whatsapp?.trim();
   const name: string | undefined = body?.name?.trim();
@@ -16,13 +21,14 @@ export async function POST(request: Request) {
     );
   }
 
-  const establishment = await getOrCreateDemoEstablishment();
+  const supabase = await createSupabaseServerClient();
+  const establishmentId = session.establishmentId;
   const pointsAwarded = Math.floor(amount);
 
-  const { data: existing, error: findError } = await supabaseAdmin
+  const { data: existing, error: findError } = await supabase
     .from("customers")
     .select("id, points_balance, visits_count")
-    .eq("establishment_id", establishment.id)
+    .eq("establishment_id", establishmentId)
     .eq("whatsapp_number", whatsapp)
     .maybeSingle();
 
@@ -39,7 +45,7 @@ export async function POST(request: Request) {
     newBalance = existing.points_balance + pointsAwarded;
     newVisits = existing.visits_count + 1;
 
-    const { error: updateError } = await supabaseAdmin
+    const { error: updateError } = await supabase
       .from("customers")
       .update({
         points_balance: newBalance,
@@ -56,10 +62,10 @@ export async function POST(request: Request) {
     newBalance = pointsAwarded;
     newVisits = 1;
 
-    const { data: created, error: createError } = await supabaseAdmin
+    const { data: created, error: createError } = await supabase
       .from("customers")
       .insert({
-        establishment_id: establishment.id,
+        establishment_id: establishmentId,
         whatsapp_number: whatsapp,
         name: name ?? null,
         points_balance: newBalance,
@@ -75,11 +81,12 @@ export async function POST(request: Request) {
     customerId = created.id;
   }
 
-  const { data: record, error: recordError } = await supabaseAdmin
+  const { data: record, error: recordError } = await supabase
     .from("consumption_records")
     .insert({
-      establishment_id: establishment.id,
+      establishment_id: establishmentId,
       customer_id: customerId,
+      staff_user_id: session.userId,
       amount_cents: Math.round(amount * 100),
       points_awarded: pointsAwarded,
       note: note ?? null,

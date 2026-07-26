@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import NavTabs from "@/components/NavTabs";
 
 const TOTAL_STEPS = 6;
@@ -23,10 +24,28 @@ type Customer = {
   visits_count: number;
 };
 
-export default function ClientePage() {
+type Establishment = { id: string; name: string; slug: string };
+
+function ClienteFlow() {
+  const searchParams = useSearchParams();
+  const slug = searchParams.get("e");
+
+  const [establishment, setEstablishment] = useState<Establishment | null | undefined>(undefined);
+
+  useEffect(() => {
+    if (!slug) {
+      setEstablishment(null);
+      return;
+    }
+    fetch(`/api/public/establishment?slug=${encodeURIComponent(slug)}`)
+      .then((res) => res.json())
+      .then((data) => setEstablishment(data.establishment ?? null))
+      .catch(() => setEstablishment(null));
+  }, [slug]);
+
   const [step, setStep] = useState(0);
-  const [whatsapp, setWhatsapp] = useState("(11) 99999-9999");
-  const [name, setName] = useState("João Silva");
+  const [whatsapp, setWhatsapp] = useState("");
+  const [name, setName] = useState("");
   const [customer, setCustomer] = useState<Customer | null>(null);
   const [npsScore, setNpsScore] = useState<number | null>(9);
   const [comment, setComment] = useState("");
@@ -54,14 +73,14 @@ export default function ClientePage() {
   };
 
   const openMessage = async () => {
-    if (!whatsapp.trim()) return;
+    if (!whatsapp.trim() || !slug) return;
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/customers/lookup", {
+      const res = await fetch("/api/public/customers/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ whatsapp: whatsapp.trim() }),
+        body: JSON.stringify({ slug, whatsapp: whatsapp.trim() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Falha ao abrir");
@@ -78,6 +97,7 @@ export default function ClientePage() {
   };
 
   const confirmCadastro = async () => {
+    if (!slug) return;
     setLoading(true);
     setError(null);
     try {
@@ -85,10 +105,10 @@ export default function ClientePage() {
         setStep(2);
         return;
       }
-      const res = await fetch("/api/customers", {
+      const res = await fetch("/api/public/customers", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ whatsapp: whatsapp.trim(), name: name.trim() }),
+        body: JSON.stringify({ slug, whatsapp: whatsapp.trim(), name: name.trim() }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Falha ao cadastrar");
@@ -106,7 +126,7 @@ export default function ClientePage() {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/nps", {
+      const res = await fetch("/api/public/nps", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customerId: customer.id, score: npsScore, comment }),
@@ -132,7 +152,7 @@ export default function ClientePage() {
     setSpinning(true);
     setError(null);
     try {
-      const res = await fetch("/api/roulette/spin", {
+      const res = await fetch("/api/public/roulette/spin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ customerId: customer.id, npsResponseId }),
@@ -157,12 +177,39 @@ export default function ClientePage() {
     }
   };
 
+  if (establishment === undefined) {
+    return (
+      <div className="shell">
+        <NavTabs />
+        <p style={{ color: "var(--text-soft)" }}>Carregando...</p>
+      </div>
+    );
+  }
+
+  if (establishment === null) {
+    return (
+      <div className="shell">
+        <NavTabs />
+        <div className="scene-head">
+          <span className="eyebrow">Jornada do cliente</span>
+          <h2>Link do estabelecimento não encontrado</h2>
+          <p>
+            Essa tela precisa do link específico de um estabelecimento real,
+            no formato <code>/cliente?e=slug-do-estabelecimento</code>. Você
+            encontra o seu no Painel, depois de criar sua conta em{" "}
+            <a href="/login" style={{ color: "var(--accent)" }}>/login</a>.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="shell">
       <NavTabs />
 
       <div className="scene-head">
-        <span className="eyebrow">Jornada do cliente</span>
+        <span className="eyebrow">Jornada do cliente · {establishment.name}</span>
         <h2>Do WhatsApp ao prêmio</h2>
         <p>
           Ligado ao Supabase de verdade — use o mesmo número lançado na tela
@@ -183,15 +230,14 @@ export default function ClientePage() {
               <>
                 <div className="chat-from">iGravt · via WhatsApp (simulado)</div>
                 <div className="chat-bubble">
-                  Oi! 🎉 Você ganhou pontos no Restaurante Sabor &amp; Arte.
-                  Toque aqui pra ver seu saldo e responder uma perguntinha
-                  rápida.
+                  Oi! 🎉 Você ganhou pontos no {establishment.name}. Toque
+                  aqui pra ver seu saldo e responder uma perguntinha rápida.
                 </div>
                 <div className="field-label" style={{ marginTop: 14 }}>Simular abertura pelo número</div>
-                <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+                <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
                 {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
                 <div className="btn-row">
-                  <button className="btn btn-primary" onClick={openMessage} disabled={loading}>
+                  <button className="btn btn-primary" onClick={openMessage} disabled={loading || !whatsapp.trim()}>
                     {loading ? "Abrindo..." : "Abrir"}
                   </button>
                 </div>
@@ -205,7 +251,7 @@ export default function ClientePage() {
                 <p style={{ fontSize: ".8rem", color: "var(--text-soft)", margin: "2px 0 8px" }}>
                   {customer ? "Já reconhecemos você." : "Só confirme seu nome — o WhatsApp já identificamos."}
                 </p>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} readOnly={!!customer} />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Seu nome" readOnly={!!customer} />
                 <input type="tel" value={whatsapp} readOnly style={{ marginTop: 8 }} />
                 {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
                 <div className="btn-row">
@@ -238,7 +284,7 @@ export default function ClientePage() {
               <>
                 <div className="phone-header"><span className="back">←</span> Pesquisa</div>
                 <div className="field-label">
-                  De 0 a 10, o quanto você indicaria o Sabor &amp; Arte a um amigo?
+                  De 0 a 10, o quanto você indicaria o {establishment.name} a um amigo?
                 </div>
                 <div className="nps-row" style={{ marginTop: 10 }}>
                   {Array.from({ length: 11 }).map((_, v) => (
@@ -270,45 +316,45 @@ export default function ClientePage() {
 
             {step === 4 && (
               <>
-              <div className="phone-header"><span className="back">←</span> Roleta de Prêmios</div>
-              <div className="wheel-wrap">
-                <div className="wheel-pin" />
-                <div
-                  className="wheel"
-                  style={{
-                    background: `conic-gradient(${gradient})`,
-                    transform: `rotate(${rotation}deg)`,
-                  }}
-                >
-                  {PRIZES.map((p, i) => (
-                    <div
-                      key={p.label}
-                      className="wheel-label"
-                      style={{ transform: `rotate(${i * SEG + SEG / 2}deg)` }}
-                    >
-                      {p.label}
-                    </div>
-                  ))}
-                  <div className="wheel-hub">🎁</div>
+                <div className="phone-header"><span className="back">←</span> Roleta de Prêmios</div>
+                <div className="wheel-wrap">
+                  <div className="wheel-pin" />
+                  <div
+                    className="wheel"
+                    style={{
+                      background: `conic-gradient(${gradient})`,
+                      transform: `rotate(${rotation}deg)`,
+                    }}
+                  >
+                    {PRIZES.map((p, i) => (
+                      <div
+                        key={p.label}
+                        className="wheel-label"
+                        style={{ transform: `rotate(${i * SEG + SEG / 2}deg)` }}
+                      >
+                        {p.label}
+                      </div>
+                    ))}
+                    <div className="wheel-hub">🎁</div>
+                  </div>
+
+                  {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
+
+                  {!spun && (
+                    <button className="btn btn-primary" onClick={spin} disabled={spinning}>
+                      {spinning ? "Girando..." : "Girar a roleta"}
+                    </button>
+                  )}
+                  {spun && prizeIndex !== null && (
+                    <>
+                      <div className="spin-result">
+                        <div className="eyebrow">você ganhou</div>
+                        <div className="prize">{PRIZES[prizeIndex].label}</div>
+                      </div>
+                      <button className="btn btn-primary" onClick={() => setStep(5)}>Ver meu cupom</button>
+                    </>
+                  )}
                 </div>
-
-                {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
-
-                {!spun && (
-                  <button className="btn btn-primary" onClick={spin} disabled={spinning}>
-                    {spinning ? "Girando..." : "Girar a roleta"}
-                  </button>
-                )}
-                {spun && prizeIndex !== null && (
-                  <>
-                    <div className="spin-result">
-                      <div className="eyebrow">você ganhou</div>
-                      <div className="prize">{PRIZES[prizeIndex].label}</div>
-                    </div>
-                    <button className="btn btn-primary" onClick={() => setStep(5)}>Ver meu cupom</button>
-                  </>
-                )}
-              </div>
               </>
             )}
 
@@ -317,7 +363,7 @@ export default function ClientePage() {
                 <div className="phone-header">iGravt · Seu Prêmio</div>
                 <div style={{ textAlign: "center", marginBottom: 6 }}>
                   <div style={{ fontSize: "1.6rem" }}>🎉</div>
-                  <h3 style={{ fontSize: "1.05rem", marginTop: 6 }}>Parabéns, {name.split(" ")[0]}!</h3>
+                  <h3 style={{ fontSize: "1.05rem", marginTop: 6 }}>Parabéns, {name.split(" ")[0] || "cliente"}!</h3>
                 </div>
                 <div className="coupon">
                   <div style={{ fontSize: ".72rem", color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: ".06em" }}>
@@ -348,5 +394,13 @@ export default function ClientePage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function ClientePage() {
+  return (
+    <Suspense>
+      <ClienteFlow />
+    </Suspense>
   );
 }

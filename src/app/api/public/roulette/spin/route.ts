@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { getOrCreateDemoEstablishment, getOrCreateDemoRewards } from "@/lib/demo-establishment";
+import { getOrCreateDefaultRewards } from "@/lib/establishment";
 
 function randomCouponCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -18,9 +18,17 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "customerId é obrigatório" }, { status: 400 });
   }
 
-  const establishment = await getOrCreateDemoEstablishment();
-  const rewards = await getOrCreateDemoRewards(establishment.id);
+  const { data: customer, error: customerError } = await supabaseAdmin
+    .from("customers")
+    .select("establishment_id")
+    .eq("id", customerId)
+    .maybeSingle();
 
+  if (customerError || !customer) {
+    return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
+  }
+
+  const rewards = await getOrCreateDefaultRewards(customer.establishment_id);
   if (rewards.length === 0) {
     return NextResponse.json({ error: "nenhuma recompensa configurada" }, { status: 500 });
   }
@@ -31,7 +39,7 @@ export async function POST(request: Request) {
   const { data, error } = await supabaseAdmin
     .from("roulette_spins")
     .insert({
-      establishment_id: establishment.id,
+      establishment_id: customer.establishment_id,
       customer_id: customerId,
       nps_response_id: npsResponseId ?? null,
       reward_id: reward.id,

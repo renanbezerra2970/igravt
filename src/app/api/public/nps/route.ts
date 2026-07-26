@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { supabaseAdmin } from "@/lib/supabase/admin";
-import { getOrCreateDemoEstablishment } from "@/lib/demo-establishment";
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => null);
@@ -16,12 +15,20 @@ export async function POST(request: Request) {
     );
   }
 
-  const establishment = await getOrCreateDemoEstablishment();
+  const { data: customer, error: customerError } = await supabaseAdmin
+    .from("customers")
+    .select("establishment_id")
+    .eq("id", customerId)
+    .maybeSingle();
+
+  if (customerError || !customer) {
+    return NextResponse.json({ error: "Cliente não encontrado" }, { status: 404 });
+  }
 
   const { data, error } = await supabaseAdmin
     .from("nps_responses")
     .insert({
-      establishment_id: establishment.id,
+      establishment_id: customer.establishment_id,
       customer_id: customerId,
       consumption_record_id: consumptionRecordId ?? null,
       score,
