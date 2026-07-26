@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase/client";
@@ -33,6 +34,7 @@ export default function NavTabs() {
   return (
     <div className="topbar">
       <Link href="/" className="brand" style={{ textDecoration: "none" }}>
+        <Image src="/logo.png" alt="" width={26} height={26} className="brand-logo" priority />
         <span className="brand-mark">iGravt</span>
         <span className="brand-sub">MVP em validação</span>
       </Link>

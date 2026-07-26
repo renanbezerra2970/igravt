@@ -2,6 +2,7 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase/client";
 
@@ -50,6 +51,7 @@ function LoginForm() {
     <div className="shell" style={{ maxWidth: 420, paddingTop: 60 }}>
       <div className="login-card" style={{ margin: 0, borderRadius: 18, minHeight: "auto" }}>
         <div className="logo-block">
+          <Image src="/logo.png" alt="iGravt" width={56} height={56} priority />
           <div className="mark">iGravt</div>
           <div className="tag">{mode === "login" ? "Entrar no painel do seu estabelecimento" : "Criar conta do estabelecimento"}</div>
         </div>

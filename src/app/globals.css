@@ -1,9 +1,10 @@
 @import "tailwindcss";
 
 /* ===== Tokens =====
-   Paleta alinhada à identidade visual do TCC: navy escuro (headers,
-   sidebar, telas de login), dourado (CTAs e destaques, como na capa)
-   e roxo (gráficos e indicadores do painel estratégico). */
+   Paleta alinhada à identidade visual do TCC (navy + dourado + roxo),
+   com o "navy" puxado sutilmente para o tom violeta escuro da nossa
+   logo — headers, sidebar e telas de login usam esse indigo-violeta
+   em vez de um navy azul puro. */
 :root {
   --ink: #1a1d29;
   --ink-soft: #666b7a;
@@ -11,9 +12,9 @@
   --paper-dim: #eaecf2;
   --elevated: #ffffff;
 
-  --navy: #1c2745;
-  --navy-deep: #121a30;
-  --navy-soft: #33406a;
+  --navy: #292063;
+  --navy-deep: #211951;
+  --navy-soft: #4e3b94;
   --gold: #c9a227;
   --gold-dim: #e2c568;
   --gold-deep: #96771a;
@@ -85,7 +86,8 @@ button { font-family: inherit; }
   gap: 20px; flex-wrap: wrap; padding-bottom: 22px; margin-bottom: 26px;
   border-bottom: 1px solid var(--border);
 }
-.brand { display: flex; align-items: baseline; gap: 10px; }
+.brand { display: flex; align-items: center; gap: 9px; }
+.brand-logo { border-radius: 6px; }
 .brand-mark { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--accent); }
 .brand-sub { font-size: .82rem; color: var(--text-soft); }
 
