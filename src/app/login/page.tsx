@@ -70,7 +70,7 @@ function LoginForm() {
           {info && <p style={{ color: "rgba(255,255,255,.85)", fontSize: ".8rem" }}>{info}</p>}
 
           <div className="btn-row" style={{ marginTop: 4 }}>
-            <button type="submit" className="btn btn-primary" disabled={loading} style={{ flex: 1 }}>
+            <button type="submit" className="btn btn-gold" disabled={loading} style={{ flex: 1 }}>
               {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
             </button>
           </div>

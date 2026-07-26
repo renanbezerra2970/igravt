@@ -7,12 +7,12 @@ import NavTabs from "@/components/NavTabs";
 const TOTAL_STEPS = 6;
 
 const PRIZES = [
-  { label: "10% OFF", color: "#C9A227" },
-  { label: "Sobremesa Grátis", color: "#6D4FD6" },
-  { label: "5% OFF", color: "#E2C568" },
-  { label: "Bebida Grátis", color: "#1C2745" },
-  { label: "15% OFF", color: "#C9A227" },
-  { label: "Brinde Surpresa", color: "#6D4FD6" },
+  { label: "10% OFF", color: "#2F5FAC" },
+  { label: "Sobremesa Grátis", color: "#14284F" },
+  { label: "5% OFF", color: "#4976C9" },
+  { label: "Bebida Grátis", color: "#0A1C3A" },
+  { label: "15% OFF", color: "#C99A4D" },
+  { label: "Brinde Surpresa", color: "#14284F" },
 ];
 const SEG = 360 / PRIZES.length;
 

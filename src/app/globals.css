@@ -1,42 +1,40 @@
 @import "tailwindcss";
 
 /* ===== Tokens =====
-   Paleta alinhada à identidade visual do TCC (navy + dourado + roxo),
-   com o "navy" puxado sutilmente para o tom violeta escuro da nossa
-   logo — headers, sidebar e telas de login usam esse indigo-violeta
-   em vez de um navy azul puro. */
+   Paleta da marca: azuis + branco no corpo do app, dourado reservado
+   para toques pontuais (marca, CTA de login, medalha, cupom) — nunca
+   como cor dominante. Sem roxo. */
 :root {
-  --ink: #1a1d29;
-  --ink-soft: #666b7a;
-  --paper: #f5f6f9;
-  --paper-dim: #eaecf2;
+  --ink: #16233f;
+  --ink-soft: #5b6b8a;
+  --paper: #f4f6fb;
+  --paper-dim: #e8ecf5;
   --elevated: #ffffff;
 
-  --navy: #292063;
-  --navy-deep: #211951;
-  --navy-soft: #4e3b94;
-  --gold: #c9a227;
-  --gold-dim: #e2c568;
-  --gold-deep: #96771a;
-  --purple: #6d4fd6;
-  --purple-dim: #a998ea;
-  --purple-deep: #4c34a0;
+  --navy: #14284f;
+  --navy-deep: #0a1c3a;
+  --blue: #2f5fac;
+  --blue-bright: #4976c9;
+  --blue-soft: #dbe6f7;
+  --gold: #c99a4d;
+  --gold-dim: #e8c98a;
+  --gold-deep: #9c7434;
 
   --good: #3f9a5c;
   --warn: #b98a2e;
   --bad: #c0503e;
-  --line: rgba(26, 29, 41, 0.12);
-  --shadow: rgba(18, 26, 48, 0.18);
+  --line: rgba(20, 40, 79, 0.14);
+  --shadow: rgba(10, 28, 58, 0.18);
 
   --bg: var(--paper);
   --bg-elevated: var(--elevated);
   --bg-sunken: var(--paper-dim);
   --text: var(--ink);
   --text-soft: var(--ink-soft);
-  --accent: var(--gold);
-  --accent-soft: var(--gold-dim);
-  --data: var(--purple);
-  --data-soft: var(--purple-dim);
+  --accent: var(--blue);
+  --accent-soft: var(--blue-soft);
+  --data: var(--blue);
+  --data-soft: var(--blue-bright);
   --border: var(--line);
 
   --font-display: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
@@ -46,16 +44,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #10131c;
-    --bg-elevated: #191d2b;
-    --bg-sunken: #141824;
-    --text: #eef0f7;
-    --text-soft: #9599ab;
-    --accent: #dcb544;
-    --accent-soft: #96771a;
-    --data: #9683e8;
-    --data-soft: #4c34a0;
-    --border: rgba(238, 240, 247, 0.12);
+    --bg: #0d1526;
+    --bg-elevated: #16203a;
+    --bg-sunken: #111a30;
+    --text: #eef1f8;
+    --text-soft: #93a0bd;
+    --accent: #6f97d6;
+    --accent-soft: #223257;
+    --data: #6f97d6;
+    --data-soft: #4976c9;
+    --border: rgba(238, 241, 248, 0.12);
     --shadow: rgba(0, 0, 0, 0.55);
   }
 }
@@ -88,7 +86,7 @@ button { font-family: inherit; }
 }
 .brand { display: flex; align-items: center; gap: 9px; }
 .brand-logo { border-radius: 6px; }
-.brand-mark { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--accent); }
+.brand-mark { font-family: var(--font-display); font-size: 1.7rem; font-weight: 700; color: var(--navy); }
 .brand-sub { font-size: .82rem; color: var(--text-soft); }
 
 .tabs { display: inline-flex; gap: 2px; padding: 3px; background: var(--bg-sunken); border: 1px solid var(--border); border-radius: 999px; }
@@ -160,14 +158,18 @@ input:focus-visible { border-color: var(--accent); }
 }
 .btn:active { transform: scale(.98); }
 .btn:disabled { opacity: .5; cursor: not-allowed; }
-.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary { background: var(--navy); color: #fff; }
 .btn-primary:hover:not(:disabled) { opacity: .92; }
+/* Toque de dourado reservado para o CTA de entrada no app (tela de login). */
+.btn-gold { background: var(--gold); color: var(--navy-deep); }
+.btn-gold:hover:not(:disabled) { opacity: .92; }
 .btn-ghost { background: transparent; color: var(--text-soft); border: 1px solid var(--border); }
 .btn-ghost:hover { color: var(--text); }
 .btn-linklike {
   appearance: none; background: none; border: 0; padding: 0; font: inherit;
-  color: var(--gold-dim); text-decoration: underline; cursor: pointer;
+  color: var(--blue); text-decoration: underline; cursor: pointer;
 }
+.login-card .btn-linklike { color: var(--gold-dim); }
 .btn-row { display: flex; gap: 10px; margin-top: auto; padding-top: 16px; }
 .btn-row .btn { flex: 1; }
 
@@ -209,7 +211,7 @@ input:focus-visible { border-color: var(--accent); }
 .kv .l { font-size: .68rem; color: var(--text-soft); text-transform: uppercase; letter-spacing: .05em; }
 
 .points-earned { text-align: center; padding: 22px 10px; background: var(--bg-sunken); border-radius: 14px; }
-.points-earned .big { font-family: var(--font-mono); font-size: 2.4rem; font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+.points-earned .big { font-family: var(--font-mono); font-size: 2.4rem; font-weight: 700; color: var(--navy); font-variant-numeric: tabular-nums; }
 .points-earned .sub { font-size: .78rem; color: var(--text-soft); margin-top: 2px; }
 
 .chat-bubble {
@@ -224,7 +226,7 @@ input:focus-visible { border-color: var(--accent); }
   width: 30px; height: 34px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-elevated);
   font-family: var(--font-mono); font-weight: 700; font-size: .82rem; color: var(--text); cursor: pointer;
 }
-.nps-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
+.nps-btn.selected { background: var(--navy); border-color: var(--navy); color: #fff; }
 .nps-scale-labels { display: flex; justify-content: space-between; font-size: .65rem; color: var(--text-soft); }
 textarea {
   width: 100%; font-family: var(--font-body); font-size: .88rem; border: 1px solid var(--border);
@@ -233,7 +235,7 @@ textarea {
 
 /* ===== Roleta ===== */
 .wheel-wrap { display: flex; flex-direction: column; align-items: center; gap: 18px; padding-top: 6px; }
-.wheel-pin { width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 14px solid var(--accent); margin-bottom: -4px; z-index: 2; }
+.wheel-pin { width: 0; height: 0; border-left: 9px solid transparent; border-right: 9px solid transparent; border-top: 14px solid var(--gold); margin-bottom: -4px; z-index: 2; }
 .wheel {
   width: 220px; height: 220px; border-radius: 50%; position: relative;
   border: 6px solid var(--bg-elevated); box-shadow: 0 0 0 2px var(--border), 0 14px 30px -10px var(--shadow);
@@ -250,9 +252,9 @@ textarea {
   text-shadow: 0 1px 2px rgba(0, 0, 0, .35);
 }
 .spin-result { text-align: center; }
-.spin-result .prize { font-family: var(--font-display); font-size: 1.3rem; color: var(--accent); }
+.spin-result .prize { font-family: var(--font-display); font-size: 1.3rem; color: var(--gold-deep); }
 
-.coupon { border: 1.5px dashed var(--accent); border-radius: 12px; padding: 16px; text-align: center; background: var(--bg-sunken); }
+.coupon { border: 1.5px dashed var(--gold); border-radius: 12px; padding: 16px; text-align: center; background: var(--bg-sunken); }
 .coupon .code { font-family: var(--font-mono); font-size: 1.15rem; font-weight: 700; letter-spacing: .04em; }
 
 /* ===== Dashboard ===== */
