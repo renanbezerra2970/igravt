@@ -53,6 +53,7 @@ export default function NavTabs() {
       {email === undefined ? null : email ? (
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
           <span className="proto-flag">{email}</span>
+          <Link href="/admin" className="btn-linklike">Admin</Link>
           <button className="btn-linklike" onClick={signOut}>Sair</button>
         </div>
       ) : (

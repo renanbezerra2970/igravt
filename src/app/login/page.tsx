@@ -11,35 +11,21 @@ function LoginForm() {
   const searchParams = useSearchParams();
   const next = searchParams.get("next") ?? "/painel";
 
-  const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setInfo(null);
 
     try {
-      if (mode === "login") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        router.push(next);
-        router.refresh();
-      } else {
-        const { data, error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        if (data.session) {
-          router.push("/onboarding");
-          router.refresh();
-        } else {
-          setInfo("Conta criada. Verifique seu e-mail para confirmar antes de entrar.");
-        }
-      }
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) throw error;
+      router.push(next);
+      router.refresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Erro inesperado");
     } finally {
@@ -53,7 +39,7 @@ function LoginForm() {
         <div className="logo-block">
           <Image src="/logo.png" alt="iGravt" width={56} height={56} priority />
           <div className="mark">iGravt</div>
-          <div className="tag">{mode === "login" ? "Entrar no painel do seu estabelecimento" : "Criar conta do estabelecimento"}</div>
+          <div className="tag">Entrar no painel do seu estabelecimento</div>
         </div>
 
         <form onSubmit={submit} style={{ marginTop: 18, display: "flex", flexDirection: "column", gap: 12 }}>
@@ -67,21 +53,17 @@ function LoginForm() {
           </div>
 
           {error && <p style={{ color: "#e28a7a", fontSize: ".8rem" }}>{error}</p>}
-          {info && <p style={{ color: "rgba(255,255,255,.85)", fontSize: ".8rem" }}>{info}</p>}
 
           <div className="btn-row" style={{ marginTop: 4 }}>
             <button type="submit" className="btn btn-gold" disabled={loading} style={{ flex: 1 }}>
-              {loading ? "Aguarde..." : mode === "login" ? "Entrar" : "Criar conta"}
+              {loading ? "Aguarde..." : "Entrar"}
             </button>
           </div>
         </form>
 
         <p style={{ textAlign: "center", fontSize: ".8rem", color: "rgba(255,255,255,.65)", marginTop: 16 }}>
-          {mode === "login" ? (
-            <>Ainda não tem conta? <button className="btn-linklike" onClick={() => setMode("signup")}>Criar estabelecimento</button></>
-          ) : (
-            <>Já tem conta? <button className="btn-linklike" onClick={() => setMode("login")}>Entrar</button></>
-          )}
+          Login liberado pela equipe iGravt. Ainda não recebeu o seu?
+          Fale com quem te apresentou a plataforma.
         </p>
       </div>
 

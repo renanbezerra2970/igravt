@@ -7,6 +7,15 @@
 
 create extension if not exists "pgcrypto";
 
+-- ============ ADMINS DA PLATAFORMA (equipe GRAVT) ============
+-- Só quem está nesta tabela pode acessar /admin e criar estabelecimentos.
+-- Não tem policy de leitura pública — só é consultada via service role.
+create table if not exists platform_admins (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  created_at timestamptz not null default now()
+);
+alter table platform_admins enable row level security;
+
 -- ============ ESTABELECIMENTOS ============
 create table if not exists establishments (
   id uuid primary key default gen_random_uuid(),
