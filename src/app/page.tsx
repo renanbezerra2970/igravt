@@ -14,8 +14,8 @@ export default function Home() {
         <p>
           Um fluxo para o garçom lançar o consumo, a jornada que o cliente
           recebe pelo WhatsApp e o painel que o estabelecimento usa para
-          acompanhar recorrência e satisfação. Ainda com dados fictícios —
-          o próximo passo é ligar essas telas ao Supabase.
+          acompanhar recorrência e satisfação. Já gravando dados reais no
+          Supabase — só o envio de WhatsApp de verdade ainda é simulado.
         </p>
       </div>
 
@@ -38,8 +38,9 @@ export default function Home() {
       </div>
 
       <footer>
-        Protótipo em construção — código no GitHub, deploy contínuo pela
-        Vercel, dados no Supabase.
+        Código no GitHub, deploy contínuo pela Vercel, dados reais no
+        Supabase. Falta conectar um provedor de WhatsApp Business API para
+        o envio de mensagens deixar de ser simulado.
       </footer>
     </div>
   );

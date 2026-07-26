@@ -16,7 +16,7 @@ export default function NavTabs() {
     <div className="topbar">
       <Link href="/" className="brand" style={{ textDecoration: "none" }}>
         <span className="brand-mark">iGravt</span>
-        <span className="brand-sub">protótipo · dados fictícios</span>
+        <span className="brand-sub">protótipo · Supabase real</span>
       </Link>
       <div role="tablist" aria-label="Telas do protótipo" className="tabs">
         {ROUTES.map((r) => (
@@ -30,7 +30,7 @@ export default function NavTabs() {
           </Link>
         ))}
       </div>
-      <span className="proto-flag">mock · sem backend ainda</span>
+      <span className="proto-flag">sem WhatsApp real ainda</span>
     </div>
   );
 }

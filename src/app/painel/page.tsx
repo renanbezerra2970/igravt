@@ -1,46 +1,50 @@
 import NavTabs from "@/components/NavTabs";
+import { getOrCreateDemoEstablishment } from "@/lib/demo-establishment";
+import { getDashboardSummary } from "@/lib/dashboard";
 
-const RANKING = [
-  { name: "João Silva", total: "R$ 2.450,00" },
-  { name: "Maria Oliveira", total: "R$ 1.980,00" },
-  { name: "Carlos Lima", total: "R$ 1.750,00" },
-  { name: "Juliana Costa", total: "R$ 1.420,00" },
-  { name: "Bruno Santos", total: "R$ 1.230,00" },
-];
+// Consulta o Supabase a cada acesso — não faz sentido pré-renderizar em
+// build time um painel cujo dado principal é "o que aconteceu agora".
+export const dynamic = "force-dynamic";
 
-const BIRTHDAYS = [
-  { name: "Fernanda Pereira", date: "23/07" },
-  { name: "Rafael Martins", date: "25/07" },
-  { name: "Lucas Almeida", date: "28/07" },
-  { name: "Camila Souza", date: "30/07" },
-];
+function formatCents(cents: number) {
+  return (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+}
 
-const NPS_POINTS = [50, 42, 34, 44, 26, 18]; // y-coordinates, lower = higher NPS
-const NPS_LABELS = ["Dez", "Jan", "Fev", "Mar", "Abr", "Mai"];
+export default async function PainelPage() {
+  const establishment = await getOrCreateDemoEstablishment();
+  const summary = await getDashboardSummary(establishment.id);
 
-export default function PainelPage() {
-  const linePoints = NPS_POINTS.map((y, i) => `${i * 64},${y}`).join(" ");
+  const trendMax = Math.max(...summary.npsTrend.map((p) => p.score ?? 0), 1);
+  const trendMin = Math.min(...summary.npsTrend.map((p) => p.score ?? 0), 0);
+  const range = Math.max(trendMax - trendMin, 1);
+  const linePoints = summary.npsTrend
+    .map((p, i) => {
+      const y = p.score === null ? 45 : 80 - ((p.score - trendMin) / range) * 70;
+      return `${i * 64},${y.toFixed(1)}`;
+    })
+    .join(" ");
+
+  const conversionPct = summary.rouletteConversionPct ?? 0;
 
   return (
     <div className="shell">
       <NavTabs />
 
       <div className="scene-head" style={{ maxWidth: 640 }}>
-        <span className="eyebrow">Painel do estabelecimento</span>
+        <span className="eyebrow">Painel do estabelecimento · {establishment.name}</span>
         <h2>O que o dono do restaurante vê</h2>
         <p>
-          Visão gerencial com os indicadores gerados pela plataforma:
-          satisfação, recorrência, conversão da roleta e clientes que
-          merecem atenção.
+          Dados reais do Supabase — ainda vão aparecer baixos ou zerados até
+          vocês gerarem uso de verdade pelas telas de Garçom e Cliente.
         </p>
       </div>
 
       <div className="dash">
         <div className="kpis">
-          <div className="kpi"><div className="l">Clientes ativos</div><div className="v">1.284</div><div className="d up">↑ 12,5%</div></div>
-          <div className="kpi"><div className="l">Clientes inativos</div><div className="v">312</div><div className="d down">↓ 8,3%</div></div>
-          <div className="kpi"><div className="l">NPS</div><div className="v">72</div><div className="d up">↑ 6 pts</div></div>
-          <div className="kpi"><div className="l">Avaliações</div><div className="v">2.185</div><div className="d up">↑ 18,7%</div></div>
+          <div className="kpi"><div className="l">Clientes ativos</div><div className="v">{summary.activeCustomers}</div><div className="d">últimos 90 dias</div></div>
+          <div className="kpi"><div className="l">Clientes inativos</div><div className="v">{summary.inactiveCustomers}</div><div className="d">sem visita recente</div></div>
+          <div className="kpi"><div className="l">NPS</div><div className="v">{summary.npsScore ?? "—"}</div><div className="d">{summary.npsResponseCount} respostas</div></div>
+          <div className="kpi"><div className="l">Giros na roleta</div><div className="v">{summary.rouletteSpinCount}</div><div className="d">total registrado</div></div>
         </div>
 
         <div className="dash-grid">
@@ -54,7 +58,7 @@ export default function PainelPage() {
                 height="90"
                 preserveAspectRatio="none"
                 role="img"
-                aria-label="Gráfico de evolução do NPS de dezembro a maio, subindo de 64 para 72 pontos"
+                aria-label="Gráfico de evolução do NPS nos últimos 6 meses"
               >
                 <polyline
                   points={linePoints}
@@ -64,28 +68,27 @@ export default function PainelPage() {
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
-                <circle cx="320" cy="18" r="4" fill="var(--accent)" />
               </svg>
               <div className="axis">
-                {NPS_LABELS.map((l) => <span key={l}>{l}</span>)}
+                {summary.npsTrend.map((p) => <span key={p.label}>{p.label}</span>)}
               </div>
             </div>
           </div>
 
           <div className="panel">
             <h3>Conversão da roleta</h3>
-            <div className="panel-sub">1.000 participações no período</div>
+            <div className="panel-sub">Giros por resposta de NPS</div>
             <div className="donut-wrap">
               <div className="donut-center">
                 <div
                   className="donut"
-                  style={{ background: "conic-gradient(var(--accent) 0% 18.6%, var(--border) 18.6% 100%)" }}
+                  style={{ background: `conic-gradient(var(--accent) 0% ${conversionPct}%, var(--border) ${conversionPct}% 100%)` }}
                 />
-                <span><span className="pct">18,6%</span></span>
+                <span><span className="pct">{conversionPct.toLocaleString("pt-BR")}%</span></span>
               </div>
               <div className="donut-legend">
-                <div className="legend-row"><span className="swatch" style={{ background: "var(--accent)" }} />Convertidas — 186</div>
-                <div className="legend-row"><span className="swatch" style={{ background: "var(--border)" }} />Não convertidas — 814</div>
+                <div className="legend-row"><span className="swatch" style={{ background: "var(--accent)" }} />Giros — {summary.rouletteSpinCount}</div>
+                <div className="legend-row"><span className="swatch" style={{ background: "var(--border)" }} />Respostas NPS — {summary.npsResponseCount}</div>
               </div>
             </div>
           </div>
@@ -94,40 +97,51 @@ export default function PainelPage() {
         <div className="dash-grid">
           <div className="panel">
             <h3>Ranking de maiores consumidores</h3>
-            <div className="panel-sub">Total gasto no período</div>
-            <div className="table-scroll">
-              <table>
-                <thead><tr><th></th><th>Cliente</th><th style={{ textAlign: "right" }}>Total</th></tr></thead>
-                <tbody>
-                  {RANKING.map((r, i) => (
-                    <tr key={r.name}>
-                      <td><span className="rank">{i + 1}</span></td>
-                      <td>{r.name}</td>
-                      <td className="num">{r.total}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            <div className="panel-sub">Total gasto registrado</div>
+            {summary.ranking.length === 0 ? (
+              <p style={{ color: "var(--text-soft)", fontSize: ".85rem", marginTop: 10 }}>
+                Ainda sem lançamentos — use a tela do Garçom pra gerar o primeiro.
+              </p>
+            ) : (
+              <div className="table-scroll">
+                <table>
+                  <thead><tr><th></th><th>Cliente</th><th style={{ textAlign: "right" }}>Total</th></tr></thead>
+                  <tbody>
+                    {summary.ranking.map((r, i) => (
+                      <tr key={r.name + i}>
+                        <td><span className="rank">{i + 1}</span></td>
+                        <td>{r.name}</td>
+                        <td className="num">{formatCents(r.totalCents)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="panel">
             <h3>Aniversariantes do mês</h3>
-            <div className="panel-sub">Julho</div>
-            <div className="bday-list">
-              {BIRTHDAYS.map((b) => (
-                <div className="bday-row" key={b.name}>
-                  🎂 {b.name} <span className="d">{b.date}</span>
-                </div>
-              ))}
-            </div>
+            <div className="panel-sub">{new Date().toLocaleDateString("pt-BR", { month: "long" })}</div>
+            {summary.birthdaysThisMonth.length === 0 ? (
+              <p style={{ color: "var(--text-soft)", fontSize: ".85rem", marginTop: 10 }}>
+                Nenhum aniversariante cadastrado neste mês ainda.
+              </p>
+            ) : (
+              <div className="bday-list">
+                {summary.birthdaysThisMonth.map((b, i) => (
+                  <div className="bday-row" key={b.name + i}>
+                    🎂 {b.name} <span className="d">{String(b.day).padStart(2, "0")}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <footer>
-        Protótipo estático com dados fictícios, para validar fluxo e
-        usabilidade antes de conectar ao Supabase.
+        Dados reais do Supabase (estabelecimento &quot;{establishment.name}&quot;) — WhatsApp de verdade ainda não está conectado.
       </footer>
     </div>
   );

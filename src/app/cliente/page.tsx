@@ -14,22 +14,112 @@ const PRIZES = [
   { label: "Brinde Surpresa", color: "#4A2E44" },
 ];
 const SEG = 360 / PRIZES.length;
-const TARGET_INDEX = 4; // "15% OFF" — matches the coupon shown on the prize screen
+
+type Customer = {
+  id: string;
+  name: string | null;
+  whatsapp_number: string;
+  points_balance: number;
+  visits_count: number;
+};
 
 export default function ClientePage() {
   const [step, setStep] = useState(0);
-  const [nps, setNps] = useState<number | null>(9);
+  const [whatsapp, setWhatsapp] = useState("(11) 99999-9999");
+  const [name, setName] = useState("João Silva");
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [npsScore, setNpsScore] = useState<number | null>(9);
+  const [comment, setComment] = useState("");
+  const [npsResponseId, setNpsResponseId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
   const [spinning, setSpinning] = useState(false);
   const [spun, setSpun] = useState(false);
   const [rotation, setRotation] = useState(0);
+  const [prizeIndex, setPrizeIndex] = useState<number | null>(null);
+  const [couponCode, setCouponCode] = useState<string | null>(null);
 
-  const next = () => setStep((s) => Math.min(s + 1, TOTAL_STEPS - 1));
   const prev = () => setStep((s) => Math.max(s - 1, 0));
   const restart = () => {
     setStep(0);
+    setCustomer(null);
+    setNpsResponseId(null);
     setSpun(false);
     setSpinning(false);
     setRotation(0);
+    setPrizeIndex(null);
+    setCouponCode(null);
+    setError(null);
+  };
+
+  const openMessage = async () => {
+    if (!whatsapp.trim()) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/customers/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ whatsapp: whatsapp.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Falha ao abrir");
+      if (data.customer) {
+        setCustomer(data.customer);
+        setName(data.customer.name ?? name);
+      }
+      setStep(1);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro inesperado");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmCadastro = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      if (customer) {
+        setStep(2);
+        return;
+      }
+      const res = await fetch("/api/customers", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ whatsapp: whatsapp.trim(), name: name.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Falha ao cadastrar");
+      setCustomer(data.customer);
+      setStep(2);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro inesperado");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const submitNps = async () => {
+    if (!customer || npsScore === null) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/nps", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: customer.id, score: npsScore, comment }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Falha ao enviar pesquisa");
+      setNpsResponseId(data.npsResponseId);
+      setStep(4);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro inesperado");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const gradient = useMemo(
@@ -37,15 +127,34 @@ export default function ClientePage() {
     []
   );
 
-  const spin = () => {
-    if (spun) return;
+  const spin = async () => {
+    if (spun || !customer) return;
     setSpinning(true);
-    const targetCenter = TARGET_INDEX * SEG + SEG / 2;
-    setRotation(360 * 5 + (360 - targetCenter));
-    setTimeout(() => {
-      setSpun(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/roulette/spin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customerId: customer.id, npsResponseId }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Falha ao girar a roleta");
+
+      const idx = PRIZES.findIndex((p) => p.label === data.prizeLabel);
+      const targetIndex = idx === -1 ? 0 : idx;
+      const targetCenter = targetIndex * SEG + SEG / 2;
+      setRotation(360 * 5 + (360 - targetCenter));
+      setPrizeIndex(targetIndex);
+      setCouponCode(data.couponCode);
+
+      setTimeout(() => {
+        setSpun(true);
+        setSpinning(false);
+      }, 3300);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erro inesperado");
       setSpinning(false);
-    }, 3300);
+    }
   };
 
   return (
@@ -56,8 +165,8 @@ export default function ClientePage() {
         <span className="eyebrow">Jornada do cliente</span>
         <h2>Do WhatsApp ao prêmio</h2>
         <p>
-          O que o consumidor vê depois que a conta é fechada: cadastro
-          rápido, pesquisa de satisfação e recompensa garantida na roleta.
+          Ligado ao Supabase de verdade — use o mesmo número lançado na tela
+          do Garçom pra ver os pontos reais aparecerem aqui.
         </p>
         <div className="stepline">
           {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
@@ -72,14 +181,19 @@ export default function ClientePage() {
           <div className="phone-screen">
             {step === 0 && (
               <>
-                <div className="chat-from">iGravt · via WhatsApp</div>
+                <div className="chat-from">iGravt · via WhatsApp (simulado)</div>
                 <div className="chat-bubble">
-                  Oi, João! 🎉 Você ganhou <b>86 pontos</b> no Restaurante
-                  Sabor &amp; Arte. Toque aqui pra ver seu saldo e responder
-                  uma perguntinha rápida.
+                  Oi! 🎉 Você ganhou pontos no Restaurante Sabor &amp; Arte.
+                  Toque aqui pra ver seu saldo e responder uma perguntinha
+                  rápida.
                 </div>
+                <div className="field-label" style={{ marginTop: 14 }}>Simular abertura pelo número</div>
+                <input type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} />
+                {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
                 <div className="btn-row">
-                  <button className="btn btn-primary" onClick={next}>Abrir</button>
+                  <button className="btn btn-primary" onClick={openMessage} disabled={loading}>
+                    {loading ? "Abrindo..." : "Abrir"}
+                  </button>
                 </div>
               </>
             )}
@@ -88,28 +202,32 @@ export default function ClientePage() {
               <>
                 <div className="field-label">Cadastro rápido</div>
                 <p style={{ fontSize: ".8rem", color: "var(--text-soft)", margin: "2px 0 8px" }}>
-                  Só confirme seu nome — o WhatsApp já identificamos.
+                  {customer ? "Já reconhecemos você." : "Só confirme seu nome — o WhatsApp já identificamos."}
                 </p>
-                <input type="text" value="João Silva" readOnly />
-                <input type="tel" value="(11) 99999-9999" readOnly style={{ marginTop: 8 }} />
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} readOnly={!!customer} />
+                <input type="tel" value={whatsapp} readOnly style={{ marginTop: 8 }} />
+                {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
                 <div className="btn-row">
-                  <button className="btn btn-primary" onClick={next}>Continuar</button>
+                  <button className="btn btn-ghost" onClick={prev}>Voltar</button>
+                  <button className="btn btn-primary" onClick={confirmCadastro} disabled={loading}>
+                    {loading ? "Confirmando..." : "Continuar"}
+                  </button>
                 </div>
               </>
             )}
 
-            {step === 2 && (
+            {step === 2 && customer && (
               <>
                 <div className="points-earned">
-                  <div className="big">186</div>
+                  <div className="big">{customer.points_balance}</div>
                   <div className="sub">pontos disponíveis</div>
                 </div>
                 <div className="kv-grid">
-                  <div className="kv"><div className="n">R$ 1,86</div><div className="l">em benefícios</div></div>
-                  <div className="kv"><div className="n">8</div><div className="l">visitas</div></div>
+                  <div className="kv"><div className="n">R$ {(customer.points_balance / 100).toFixed(2).replace(".", ",")}</div><div className="l">em benefícios</div></div>
+                  <div className="kv"><div className="n">{customer.visits_count}</div><div className="l">visitas</div></div>
                 </div>
                 <div className="btn-row">
-                  <button className="btn btn-primary" onClick={next}>Avaliar minha visita</button>
+                  <button className="btn btn-primary" onClick={() => setStep(3)}>Avaliar minha visita</button>
                 </div>
               </>
             )}
@@ -124,8 +242,8 @@ export default function ClientePage() {
                     <button
                       key={v}
                       type="button"
-                      className={`nps-btn${nps === v ? " selected" : ""}`}
-                      onClick={() => setNps(v)}
+                      className={`nps-btn${npsScore === v ? " selected" : ""}`}
+                      onClick={() => setNpsScore(v)}
                     >
                       {v}
                     </button>
@@ -136,10 +254,13 @@ export default function ClientePage() {
                   <span>muito provável</span>
                 </div>
                 <div className="field-label" style={{ marginTop: 14 }}>O que podemos melhorar? (opcional)</div>
-                <textarea readOnly defaultValue="Atendimento ótimo, só demorou um pouco a sobremesa." />
+                <textarea value={comment} onChange={(e) => setComment(e.target.value)} placeholder="Escreva aqui..." />
+                {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
                 <div className="btn-row">
                   <button className="btn btn-ghost" onClick={prev}>Voltar</button>
-                  <button className="btn btn-primary" onClick={next}>Enviar e girar a roleta</button>
+                  <button className="btn btn-primary" onClick={submitNps} disabled={loading || npsScore === null}>
+                    {loading ? "Enviando..." : "Enviar e girar a roleta"}
+                  </button>
                 </div>
               </>
             )}
@@ -166,36 +287,38 @@ export default function ClientePage() {
                   <div className="wheel-hub">🎁</div>
                 </div>
 
+                {error && <p style={{ color: "var(--bad)", fontSize: ".8rem" }}>{error}</p>}
+
                 {!spun && (
                   <button className="btn btn-primary" onClick={spin} disabled={spinning}>
                     {spinning ? "Girando..." : "Girar a roleta"}
                   </button>
                 )}
-                {spun && (
+                {spun && prizeIndex !== null && (
                   <>
                     <div className="spin-result">
                       <div className="eyebrow">você ganhou</div>
-                      <div className="prize">{PRIZES[TARGET_INDEX].label}</div>
+                      <div className="prize">{PRIZES[prizeIndex].label}</div>
                     </div>
-                    <button className="btn btn-primary" onClick={next}>Ver meu cupom</button>
+                    <button className="btn btn-primary" onClick={() => setStep(5)}>Ver meu cupom</button>
                   </>
                 )}
               </div>
             )}
 
-            {step === 5 && (
+            {step === 5 && prizeIndex !== null && (
               <>
                 <div style={{ textAlign: "center", marginBottom: 6 }}>
                   <div style={{ fontSize: "1.6rem" }}>🎉</div>
-                  <h3 style={{ fontSize: "1.05rem", marginTop: 6 }}>Parabéns, João!</h3>
+                  <h3 style={{ fontSize: "1.05rem", marginTop: 6 }}>Parabéns, {name.split(" ")[0]}!</h3>
                 </div>
                 <div className="coupon">
                   <div style={{ fontSize: ".72rem", color: "var(--text-soft)", textTransform: "uppercase", letterSpacing: ".06em" }}>
                     Seu cupom
                   </div>
-                  <div className="code">IGRAVT15OFF</div>
+                  <div className="code">{couponCode}</div>
                   <div style={{ fontSize: ".78rem", color: "var(--text-soft)", marginTop: 4 }}>
-                    15% OFF na próxima visita
+                    {PRIZES[prizeIndex].label}
                   </div>
                 </div>
                 <div className="btn-row">
@@ -211,9 +334,9 @@ export default function ClientePage() {
           <span className="eyebrow">O que este passo mostra</span>
           <dl>
             <div><dt>Fricção mínima</dt><dd>Cadastro exige só a confirmação — o número já veio do WhatsApp.</dd></div>
-            <div><dt>NPS na hora</dt><dd>Pesquisa curta, respondida ainda dentro do calor da experiência.</dd></div>
-            <div><dt>Recompensa garantida</dt><dd>A roleta não tem opção de &quot;perder&quot; — sempre há um prêmio configurado pelo estabelecimento.</dd></div>
-            <div><dt>Retenção</dt><dd>Cupom salvo incentiva o retorno dentro da validade.</dd></div>
+            <div><dt>NPS na hora</dt><dd>Gravado de verdade no Supabase, aparece no Painel.</dd></div>
+            <div><dt>Recompensa garantida</dt><dd>Prêmio sorteado no servidor entre as recompensas cadastradas — sempre há um prêmio.</dd></div>
+            <div><dt>Cupom real</dt><dd>Código gerado e salvo no banco a cada giro.</dd></div>
           </dl>
         </div>
       </div>
