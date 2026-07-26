@@ -35,7 +35,7 @@ export default function NavTabs() {
     <div className="topbar">
       <Link href="/" className="brand" style={{ textDecoration: "none" }}>
         <Image src="/logo.png" alt="" width={26} height={26} className="brand-logo" priority />
-        <span className="brand-mark">iGravt</span>
+        <span className="brand-mark"><span className="i">i</span><span className="rest">Gravt</span></span>
         <span className="brand-sub">MVP em validação</span>
       </Link>
       <div role="tablist" aria-label="Telas do app" className="tabs">
