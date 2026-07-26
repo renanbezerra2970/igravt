@@ -6,12 +6,12 @@ import NavTabs from "@/components/NavTabs";
 const TOTAL_STEPS = 6;
 
 const PRIZES = [
-  { label: "10% OFF", color: "#C9723A" },
-  { label: "Sobremesa Grátis", color: "#4A2E44" },
-  { label: "5% OFF", color: "#7E9F35" },
-  { label: "Bebida Grátis", color: "#9C551F" },
-  { label: "15% OFF", color: "#C9723A" },
-  { label: "Brinde Surpresa", color: "#4A2E44" },
+  { label: "10% OFF", color: "#C9A227" },
+  { label: "Sobremesa Grátis", color: "#6D4FD6" },
+  { label: "5% OFF", color: "#E2C568" },
+  { label: "Bebida Grátis", color: "#1C2745" },
+  { label: "15% OFF", color: "#C9A227" },
+  { label: "Brinde Surpresa", color: "#6D4FD6" },
 ];
 const SEG = 360 / PRIZES.length;
 
@@ -200,6 +200,7 @@ export default function ClientePage() {
 
             {step === 1 && (
               <>
+                <div className="phone-header">iGravt · Cadastro</div>
                 <div className="field-label">Cadastro rápido</div>
                 <p style={{ fontSize: ".8rem", color: "var(--text-soft)", margin: "2px 0 8px" }}>
                   {customer ? "Já reconhecemos você." : "Só confirme seu nome — o WhatsApp já identificamos."}
@@ -218,6 +219,7 @@ export default function ClientePage() {
 
             {step === 2 && customer && (
               <>
+                <div className="phone-header">iGravt · Meus Pontos</div>
                 <div className="points-earned">
                   <div className="big">{customer.points_balance}</div>
                   <div className="sub">pontos disponíveis</div>
@@ -234,6 +236,7 @@ export default function ClientePage() {
 
             {step === 3 && (
               <>
+                <div className="phone-header"><span className="back">←</span> Pesquisa</div>
                 <div className="field-label">
                   De 0 a 10, o quanto você indicaria o Sabor &amp; Arte a um amigo?
                 </div>
@@ -266,6 +269,8 @@ export default function ClientePage() {
             )}
 
             {step === 4 && (
+              <>
+              <div className="phone-header"><span className="back">←</span> Roleta de Prêmios</div>
               <div className="wheel-wrap">
                 <div className="wheel-pin" />
                 <div
@@ -304,10 +309,12 @@ export default function ClientePage() {
                   </>
                 )}
               </div>
+              </>
             )}
 
             {step === 5 && prizeIndex !== null && (
               <>
+                <div className="phone-header">iGravt · Seu Prêmio</div>
                 <div style={{ textAlign: "center", marginBottom: 6 }}>
                   <div style={{ fontSize: "1.6rem" }}>🎉</div>
                   <h3 style={{ fontSize: "1.05rem", marginTop: 6 }}>Parabéns, {name.split(" ")[0]}!</h3>

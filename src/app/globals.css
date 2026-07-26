@@ -1,30 +1,41 @@
 @import "tailwindcss";
 
-/* ===== Tokens ===== */
+/* ===== Tokens =====
+   Paleta alinhada à identidade visual do TCC: navy escuro (headers,
+   sidebar, telas de login), dourado (CTAs e destaques, como na capa)
+   e roxo (gráficos e indicadores do painel estratégico). */
 :root {
-  --ink: #17181d;
-  --ink-soft: #6b6660;
-  --paper: #faf6ef;
-  --paper-dim: #f0e9dc;
+  --ink: #1a1d29;
+  --ink-soft: #666b7a;
+  --paper: #f5f6f9;
+  --paper-dim: #eaecf2;
   --elevated: #ffffff;
-  --copper: #c9723a;
-  --copper-dim: #e3a272;
-  --copper-deep: #9c551f;
-  --lime: #7e9f35;
-  --plum: #4a2e44;
-  --good: #4c8a5b;
+
+  --navy: #1c2745;
+  --navy-deep: #121a30;
+  --navy-soft: #33406a;
+  --gold: #c9a227;
+  --gold-dim: #e2c568;
+  --gold-deep: #96771a;
+  --purple: #6d4fd6;
+  --purple-dim: #a998ea;
+  --purple-deep: #4c34a0;
+
+  --good: #3f9a5c;
   --warn: #b98a2e;
-  --bad: #b84a38;
-  --line: rgba(23, 24, 29, 0.13);
-  --shadow: rgba(23, 24, 29, 0.16);
+  --bad: #c0503e;
+  --line: rgba(26, 29, 41, 0.12);
+  --shadow: rgba(18, 26, 48, 0.18);
 
   --bg: var(--paper);
   --bg-elevated: var(--elevated);
   --bg-sunken: var(--paper-dim);
   --text: var(--ink);
   --text-soft: var(--ink-soft);
-  --accent: var(--copper);
-  --accent-soft: var(--copper-dim);
+  --accent: var(--gold);
+  --accent-soft: var(--gold-dim);
+  --data: var(--purple);
+  --data-soft: var(--purple-dim);
   --border: var(--line);
 
   --font-display: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
@@ -34,14 +45,16 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg: #121216;
-    --bg-elevated: #1c1d22;
-    --bg-sunken: #191a1f;
-    --text: #f3efe6;
-    --text-soft: #afa89b;
-    --accent: #e0975b;
-    --accent-soft: #7a4a2a;
-    --border: rgba(243, 239, 230, 0.12);
+    --bg: #10131c;
+    --bg-elevated: #191d2b;
+    --bg-sunken: #141824;
+    --text: #eef0f7;
+    --text-soft: #9599ab;
+    --accent: #dcb544;
+    --accent-soft: #96771a;
+    --data: #9683e8;
+    --data-soft: #4c34a0;
+    --border: rgba(238, 240, 247, 0.12);
     --shadow: rgba(0, 0, 0, 0.55);
   }
 }
@@ -156,6 +169,24 @@ input:focus-visible { border-color: var(--accent); }
 .logo-block .mark { font-family: var(--font-display); font-size: 1.9rem; font-weight: 700; color: var(--accent); }
 .logo-block .tag { font-size: .78rem; color: var(--text-soft); margin-top: 2px; }
 
+/* Painel de login em navy cheio, como na Figura 1 do TCC */
+.login-card {
+  background: linear-gradient(180deg, var(--navy) 0%, var(--navy-deep) 100%);
+  color: #fff; border-radius: 18px; padding: 30px 20px 20px; flex: 1;
+  display: flex; flex-direction: column; margin: -22px -18px; min-height: calc(100% + 44px);
+}
+.login-card .logo-block .mark { color: var(--gold-dim, var(--accent)); }
+.login-card .logo-block .tag { color: rgba(255, 255, 255, 0.62); }
+.login-card .field-label { color: rgba(255, 255, 255, 0.55); }
+
+/* Barra de cabeçalho navy no topo da tela, como nas Figuras 1 e 2 */
+.phone-header {
+  background: var(--navy); color: #fff; margin: -22px -18px 16px; padding: 16px 18px 14px;
+  border-radius: 22px 22px 12px 12px; display: flex; align-items: center; gap: 8px;
+  font-weight: 700; font-size: .92rem;
+}
+.phone-header .back { opacity: .75; font-size: 1rem; line-height: 1; }
+
 .card { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
 .client-card { display: flex; align-items: center; gap: 12px; }
 .avatar {
@@ -251,7 +282,9 @@ table { width: 100%; border-collapse: collapse; font-size: .85rem; }
 thead th { text-align: left; font-size: .68rem; text-transform: uppercase; letter-spacing: .05em; color: var(--text-soft); padding: 0 8px 8px; font-weight: 700; }
 tbody td { padding: 9px 8px; border-top: 1px solid var(--border); }
 tbody td.num { font-family: var(--font-mono); font-variant-numeric: tabular-nums; text-align: right; }
-.rank { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--bg-sunken); font-size: .72rem; font-weight: 700; font-family: var(--font-mono); }
+.rank { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 50%; background: var(--gold); color: #fff; font-size: .72rem; font-weight: 700; font-family: var(--font-mono); }
+.rank.n2 { background: #9aa1b4; }
+.rank.n3 { background: #b57a4a; }
 
 .bday-list { display: grid; gap: 10px; margin-top: 10px; }
 .bday-row { display: flex; align-items: center; gap: 10px; font-size: .85rem; }

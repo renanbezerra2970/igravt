@@ -114,7 +114,7 @@ export default function GarcomPage() {
           <div className="phone-notch" />
           <div className="phone-screen">
             {step === 0 && (
-              <>
+              <div className="login-card">
                 <div className="logo-block">
                   <div className="mark">iGravt</div>
                   <div className="tag">Relacionamento que traz clientes de volta</div>
@@ -132,11 +132,12 @@ export default function GarcomPage() {
                 <div className="btn-row">
                   <button className="btn btn-primary" onClick={() => setStep(1)}>Entrar</button>
                 </div>
-              </>
+              </div>
             )}
 
             {step === 1 && (
               <>
+                <div className="phone-header"><span className="back">←</span> Identificar Cliente</div>
                 <div className="field-label">Buscar cliente por WhatsApp</div>
                 <input
                   type="tel"
@@ -189,6 +190,7 @@ export default function GarcomPage() {
 
             {step === 2 && (
               <>
+                <div className="phone-header"><span className="back">←</span> Lançar Consumo</div>
                 {!customer && (
                   <>
                     <div className="field-label">Nome do cliente</div>

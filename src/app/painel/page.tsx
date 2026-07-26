@@ -63,7 +63,7 @@ export default async function PainelPage() {
                 <polyline
                   points={linePoints}
                   fill="none"
-                  stroke="var(--accent)"
+                  stroke="var(--data)"
                   strokeWidth="2.5"
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -82,12 +82,12 @@ export default async function PainelPage() {
               <div className="donut-center">
                 <div
                   className="donut"
-                  style={{ background: `conic-gradient(var(--accent) 0% ${conversionPct}%, var(--border) ${conversionPct}% 100%)` }}
+                  style={{ background: `conic-gradient(var(--data) 0% ${conversionPct}%, var(--border) ${conversionPct}% 100%)` }}
                 />
                 <span><span className="pct">{conversionPct.toLocaleString("pt-BR")}%</span></span>
               </div>
               <div className="donut-legend">
-                <div className="legend-row"><span className="swatch" style={{ background: "var(--accent)" }} />Giros — {summary.rouletteSpinCount}</div>
+                <div className="legend-row"><span className="swatch" style={{ background: "var(--data)" }} />Giros — {summary.rouletteSpinCount}</div>
                 <div className="legend-row"><span className="swatch" style={{ background: "var(--border)" }} />Respostas NPS — {summary.npsResponseCount}</div>
               </div>
             </div>
@@ -109,7 +109,7 @@ export default async function PainelPage() {
                   <tbody>
                     {summary.ranking.map((r, i) => (
                       <tr key={r.name + i}>
-                        <td><span className="rank">{i + 1}</span></td>
+                        <td><span className={`rank${i === 1 ? " n2" : i === 2 ? " n3" : ""}`}>{i + 1}</span></td>
                         <td>{r.name}</td>
                         <td className="num">{formatCents(r.totalCents)}</td>
                       </tr>
