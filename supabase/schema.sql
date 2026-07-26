@@ -134,23 +134,32 @@ as $$
   );
 $$;
 
+-- drop+create em cada policy para o script poder ser re-executado sem
+-- erro (CREATE POLICY não aceita IF NOT EXISTS no Postgres).
+drop policy if exists "staff read own establishment" on establishments;
 create policy "staff read own establishment" on establishments
   for select using (is_staff_of(id));
 
+drop policy if exists "staff manage own staff_members" on staff_members;
 create policy "staff manage own staff_members" on staff_members
   for all using (is_staff_of(establishment_id));
 
+drop policy if exists "staff manage own customers" on customers;
 create policy "staff manage own customers" on customers
   for all using (is_staff_of(establishment_id));
 
+drop policy if exists "staff manage own consumption_records" on consumption_records;
 create policy "staff manage own consumption_records" on consumption_records
   for all using (is_staff_of(establishment_id));
 
+drop policy if exists "staff manage own nps_responses" on nps_responses;
 create policy "staff manage own nps_responses" on nps_responses
   for all using (is_staff_of(establishment_id));
 
+drop policy if exists "staff manage own rewards" on rewards;
 create policy "staff manage own rewards" on rewards
   for all using (is_staff_of(establishment_id));
 
+drop policy if exists "staff manage own roulette_spins" on roulette_spins;
 create policy "staff manage own roulette_spins" on roulette_spins
   for all using (is_staff_of(establishment_id));
